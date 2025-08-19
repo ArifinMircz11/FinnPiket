@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scan Absensi Siswa</title>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      text-align: center;
+    }
+    video {
+      width: 90%;
+      max-width: 480px;
+      border: 4px solid #3498db;
+      border-radius: 12px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #result {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+    }
+    #status {
+      color: green;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>📷 Scan Absensi Siswa</h1>
+  <video id="video" playsinline></video>
+  <p>Barcode Terbaca: <span id="result">-</span></p>
+  <p id="status"></p>
+
+  <h2>📋 Tabel Absensi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>ID Card</th>
+        <th>Nama</th>
+        <th>Pagi</th>
+        <th>Pulang</th>
+      </tr>
+    </thead>
+    <tbody id="tabel-hasil"></tbody>
+  </table>
+
+  <!-- Skrip -->
+  <script src="data-siswa.js"></script>
+  <script>
+    const statusElement = document.getElementById('status');
+    const resultElement = document.getElementById('result');
+
+    function prosesAbsen(scannedId) {
+      const siswa = dataSiswa.find(s => s.id === scannedId);
+
+      if (!siswa) {
+        statusElement.textContent = 'ID tidak ditemukan';
+        statusElement.style.color = 'red';
+        return;
+      }
+
+      const now = new Date();
+      const jam = now.getHours();
+      const waktu = jam < 12 ? 'pagi' : 'pulang';
+      const waktuStr = now.toLocaleTimeString();
+
+      let row = document.getElementById(`row-${siswa.id}`);
+      if (!row) {
+        row = document.createElement('tr');
+        row.id = `row-${siswa.id}`;
+        row.innerHTML = `
+          <td>${document.querySelectorAll('#tabel-hasil tr').length + 1}</td>
+          <td>${siswa.id}</td>
+          <td>${siswa.nama}</td>
+          <td id="pagi-${siswa.id}">-</td>
+          <td id="pulang-${siswa.id}">-</td>
+        `;
+        document.getElementById('tabel-hasil').appendChild(row);
+      }
+
+      const waktuCell = document.getElementById(`${waktu}-${siswa.id}`);
+
+      if (waktuCell.textContent !== '-') {
+        statusElement.textContent = `Sudah absen ${waktu}`;
+        statusElement.style.color = 'orange';
+        return;
+      }
+
+      waktuCell.textContent = waktuStr;
+      statusElement.textContent = `Absensi ${waktu} berhasil!`;
+      statusElement.style.color = 'green';
+    }
+
+    // ZXing setup
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+      if (result) {
+        const scannedId = result.text.trim();
+        resultElement.textContent = scannedId;
+        prosesAbsen(scannedId);
+      }
+    });
+  </script>
+</body>
+</html>
