@@ -3,129 +3,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scan Absensi Siswa</title>
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <title>Sistem Absensi Supabase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-      text-align: center;
-    }
-    video {
-      width: 90%;
-      max-width: 480px;
-      border: 4px solid #3498db;
-      border-radius: 12px;
-    }
-    h1 {
-      margin-bottom: 10px;
-    }
-    #result {
-      margin-top: 10px;
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #333;
-    }
-    #status {
-      color: green;
-      font-weight: bold;
-    }
-    table {
-      width: 100%;
-      margin-top: 30px;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      font-size: 14px;
-    }
-    th {
-      background-color: #3498db;
-      color: white;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body{font-family:'Inter',sans-serif;background:#f3f4f6}
   </style>
 </head>
-<body>
-  <h1>📷 Scan Absensi Siswa</h1>
-  <video id="video" playsinline></video>
-  <p>Barcode Terbaca: <span id="result">-</span></p>
-  <p id="status"></p>
+<body class="p-4 md:p-8">
+  <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Sistem Absensi</h1>
+    <p class="text-gray-500 mb-6 text-center">Aplikasi absensi sederhana menggunakan Supabase dan GitHub Pages.</p>
 
-  <h2>📋 Tabel Absensi</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>ID Card</th>
-        <th>Nama</th>
-        <th>Pagi</th>
-        <th>Pulang</th>
-      </tr>
-    </thead>
-    <tbody id="tabel-hasil"></tbody>
-  </table>
+    <!-- Form Pemindaian -->
+    <div class="flex flex-col items-center mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">Simulasi Pemindaian ID</h2>
+      <div class="flex w-full max-w-sm gap-2">
+        <input id="barcodeInput" type="text" placeholder="Masukkan ID siswa (contoh: 24001)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        <select id="jenisAbsenSelect" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="pagi">Pagi</option>
+          <option value="pulang">Pulang</option>
+        </select>
+        <button id="scanButton" class="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md">Pindai</button>
+      </div>
+      <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+    </div>
 
-  <!-- Skrip -->
-  <script src="data-siswa.js"></script>
-  <script>
-    const statusElement = document.getElementById('status');
-    const resultElement = document.getElementById('result');
+    <!-- Dashboard -->
+    <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-700 mb-4">Dashboard Realtime Absensi</h2>
+      <div class="overflow-x-auto rounded-lg shadow-sm">
+        <table class="min-w-full bg-white border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Waktu</th>
+              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
+              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Jenis</th>
+            </tr>
+          </thead>
+          <tbody id="absensiTableBody" class="divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+      <p id="loadingIndicator" class="text-center text-gray-500 mt-4 text-sm hidden">Memuat data...</p>
+    </div>
+  </div>
 
-    function prosesAbsen(scannedId) {
-      const siswa = dataSiswa.find(s => s.id === scannedId);
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-      if (!siswa) {
-        statusElement.textContent = 'ID tidak ditemukan';
-        statusElement.style.color = 'red';
+    // === GANTI dengan kredensial Supabase kamu ===
+    const SUPABASE_URL = 'https://<PROJECT_REF>.supabase.co';
+    const SUPABASE_ANON_KEY = '<ANON_PUBLIC_KEY>';
+    // =============================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusMessage = document.getElementById('statusMessage');
+
+      if (SUPABASE_URL.includes('<PROJECT_REF>') || SUPABASE_ANON_KEY.includes('<ANON_PUBLIC_KEY>')) {
+        statusMessage.textContent = 'ERROR: Ganti SUPABASE_URL dan ANON KEY.';
+        statusMessage.className = 'mt-4 text-center text-sm font-medium text-red-600';
         return;
       }
 
-      const now = new Date();
-      const jam = now.getHours();
-      const waktu = jam < 12 ? 'pagi' : 'pulang';
-      const waktuStr = now.toLocaleTimeString();
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      let row = document.getElementById(`row-${siswa.id}`);
-      if (!row) {
-        row = document.createElement('tr');
-        row.id = `row-${siswa.id}`;
-        row.innerHTML = `
-          <td>${document.querySelectorAll('#tabel-hasil tr').length + 1}</td>
-          <td>${siswa.id}</td>
-          <td>${siswa.nama}</td>
-          <td id="pagi-${siswa.id}">-</td>
-          <td id="pulang-${siswa.id}">-</td>
-        `;
-        document.getElementById('tabel-hasil').appendChild(row);
+      // UI
+      const barcodeInput = document.getElementById('barcodeInput');
+      const jenisAbsenSelect = document.getElementById('jenisAbsenSelect');
+      const scanButton = document.getElementById('scanButton');
+      const absensiTableBody = document.getElementById('absensiTableBody');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+
+      function showStatus(msg, isErr=false){
+        statusMessage.textContent = msg;
+        statusMessage.className = `mt-4 text-center text-sm font-medium ${isErr ? 'text-red-600':'text-green-600'}`;
       }
 
-      const waktuCell = document.getElementById(`${waktu}-${siswa.id}`);
+      // === INSERT langsung ke tabel absensi (tanpa RPC) ===
+      async function absenLangsung(siswaId, jenis){
+        // validasi siswa ada
+        const { data: siswa, error: eSiswa } = await supabase
+          .from('siswa').select('nama').eq('id', siswaId).maybeSingle();
+        if (eSiswa || !siswa){
+          return { status:'error', message:'ID siswa tidak ditemukan.' };
+        }
 
-      if (waktuCell.textContent !== '-') {
-        statusElement.textContent = `Sudah absen ${waktu}`;
-        statusElement.style.color = 'orange';
-        return;
+        // insert; jika duplikat harian → 23505
+        const { data, error } = await supabase
+          .from('absensi')
+          .insert({ siswa_id: siswaId, jenis, scanner: navigator.userAgent })
+          .select('waktu, jenis')
+          .maybeSingle();
+
+        if (error){
+          if (error.code === '23505') return { status:'duplikat', message:'Sudah absen hari ini.' };
+          return { status:'error', message:error.message };
+        }
+        return { status:'ok', row:{ waktu: data.waktu, jenis: data.jenis, nama: siswa.nama } };
       }
 
-      waktuCell.textContent = waktuStr;
-      statusElement.textContent = `Absensi ${waktu} berhasil!`;
-      statusElement.style.color = 'green';
-    }
-
-    // ZXing setup
-    const codeReader = new ZXing.BrowserMultiFormatReader();
-    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-      if (result) {
-        const scannedId = result.text.trim();
-        resultElement.textContent = scannedId;
-        prosesAbsen(scannedId);
+      // Render baris tabel
+      function renderRow({waktu, nama, jenis}){
+        const tr = document.createElement('tr');
+        const waktuFormatted = new Date(waktu).toLocaleString('id-ID',{
+          year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'
+        });
+        const jenisText = jenis.charAt(0).toUpperCase() + jenis.slice(1);
+        tr.className = "hover:bg-gray-50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800">${waktuFormatted}</td>
+          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800 font-medium">${nama}</td>
+          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800">${jenisText}</td>`;
+        return tr;
       }
+
+      // Load awal: embed join via FK (siswa:siswa_id)
+      async function loadInitialData(){
+        loadingIndicator.classList.remove('hidden');
+        absensiTableBody.innerHTML = '';
+        const { data, error } = await supabase
+          .from('absensi')
+          .select('waktu, jenis, siswa:siswa_id(nama)')
+          .order('waktu', { ascending: false })
+          .limit(50);
+        if (error){
+          showStatus('Gagal memuat data.', true);
+          loadingIndicator.classList.add('hidden');
+          return;
+        }
+        (data||[]).forEach(item=>{
+          const row = { waktu:item.waktu, jenis:item.jenis, nama:item.siswa?.nama ?? '-' };
+          absensiTableBody.appendChild(renderRow(row));
+        });
+        loadingIndicator.classList.add('hidden');
+      }
+
+      // Realtime: dengarkan INSERT ke absensi
+      function setupRealtime(){
+        supabase.channel('absensi-channel')
+          .on('postgres_changes', { event:'INSERT', schema:'public', table:'absensi' }, async (payload)=>{
+            const rowNew = payload.new; // { siswa_id, waktu, jenis, ... }
+            // ambil nama siswa
+            const { data: siswa } = await supabase
+              .from('siswa').select('nama').eq('id', rowNew.siswa_id).single();
+            const row = { waktu: rowNew.waktu, jenis: rowNew.jenis, nama: siswa?.nama ?? '-' };
+            absensiTableBody.prepend(renderRow(row));
+            if (absensiTableBody.children.length > 50) absensiTableBody.lastChild?.remove();
+          })
+          .subscribe();
+      }
+
+      // Klik Pindai
+      scanButton.addEventListener('click', async ()=>{
+        const id = barcodeInput.value.trim();
+        const jenis = jenisAbsenSelect.value;
+        if (!id){ showStatus('Masukkan ID siswa.', true); return; }
+
+        const res = await absenLangsung(id, jenis);
+        if (res.status === 'ok'){
+          showStatus(`Absensi ${res.row.nama} berhasil.`);
+          barcodeInput.value = '';
+          absensiTableBody.prepend(renderRow(res.row));
+          if (absensiTableBody.children.length > 50) absensiTableBody.lastChild?.remove();
+        } else {
+          showStatus(res.message, true);
+        }
+      });
+
+      loadInitialData();
+      setupRealtime();
     });
   </script>
 </body>
