@@ -103,11 +103,16 @@
   }
 
   // Inisialisasi kamera
-  codeReader.listVideoInputDevices().then(devices => {
-    if (!devices.length) {
-      debugEl.textContent = "❌ Kamera tidak ditemukan";
-      return;
-    }
+codeReader.listVideoInputDevices().then(devices => {
+  if (!devices.length) {
+    debugEl.textContent = "❌ Kamera tidak ditemukan";
+    return;
+  }
+  const camId = devices[0].deviceId;
+  codeReader.decodeFromVideoDevice(camId, videoElement, (resultObj, err) => {
+    ...
+  }
+}
     const camId = devices[0].deviceId;
     codeReader.decodeFromVideoDevice(camId, videoElement, (resultObj, err) => {
       if (resultObj) {
