@@ -1,239 +1,233 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Pindai Barcode</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        .container {
-            max-width: 900px;
-        }
-        #interactive.viewport {
-            width: 100%;
-            height: 300px;
-        }
-        #interactive.viewport > canvas, #interactive.viewport > video {
-            max-width: 100%;
-            width: 100%;
-            height: auto;
-            border-radius: 0.75rem;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Absensi Barcode — Supabase</title>
+
+  <!-- (Opsional) Font & Reset kecil -->
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #f6f7fb; color: #1f2937; }
+    header, footer { background: #111827; color: #f9fafb; }
+    header { padding: 12px 16px; border-bottom: 1px solid #111; }
+    main { padding: 16px; max-width: 1200px; margin: 0 auto; }
+    .wrap { display: grid; gap: 16px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .row > * { margin-right: 8px; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: #f3f4f6; cursor: pointer; }
+    .btn[disabled] { opacity: .5; cursor: not-allowed; }
+    .btn.primary { background: #2563eb; border-color: #1d4ed8; color: #fff; }
+    .btn.warn { background: #f59e0b; border-color: #d97706; color: #111; }
+    .field { display: inline-flex; align-items: center; gap: 6px; }
+    .field input, .field select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; }
+    .muted { color: #6b7280; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; background: #f3f4f6; font-weight: 600; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; }
+    tr.highlight { background: #ecfeff; }
+    .right { margin-left: auto; }
+    dialog { border: none; border-radius: 12px; padding: 0; max-width: 520px; width: calc(100% - 32px); }
+    dialog .card { border: none; }
+    .toast { position: fixed; right: 16px; bottom: 16px; background: #111827; color: #fff; padding: 10px 14px; border-radius: 10px; display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+    video { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; }
+    .table-tools { display: flex; gap: 8px; align-items: center; }
+  </style>
+
+  <!-- Library (dipanggil di bawah saat implementasi) -->
+  <!-- <script src="https://unpkg.com/@zxing/library@latest"></script> -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@latest/dist/umd/supabase.min.js"></script> -->
 </head>
-<body class="flex flex-col items-center p-4">
-
-    <div class="container w-full bg-white shadow-xl rounded-xl p-8 space-y-6">
-        <header class="flex flex-col sm:flex-row justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Absensi Siswa</h1>
-            <span id="hasil" class="text-xl sm:text-2xl font-extrabold text-blue-600 mt-4 sm:mt-0">Kode Siswa: -</span>
-        </header>
-
-        <main class="space-y-6">
-            <div id="pindai-area" class="flex flex-col items-center">
-                <p class="text-center text-lg text-gray-700 mb-4">Silakan pindai barcode siswa...</p>
-                <div id="interactive" class="viewport w-full rounded-xl overflow-hidden"></div>
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-4">
-                    <button id="start-btn" class="bg-green-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-green-600 transition-colors">Mulai Pindai</button>
-                    <button id="stop-btn" class="bg-red-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-600 transition-colors">Hentikan Pindai</button>
-                    <button id="absensi-pulang-btn" class="bg-yellow-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-yellow-600 transition-colors">Absen Pulang (Demo)</button>
-                </div>
-                <div id="message-box" class="mt-4 p-3 w-full bg-red-100 text-red-700 rounded-lg hidden"></div>
-            </div>
-
-            <div class="overflow-x-auto shadow-md rounded-xl">
-                <table id="tabel" class="min-w-full bg-white">
-                    <thead class="bg-gray-200">
-                        <tr>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">No.</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">ID Siswa</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Nama</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Waktu Pagi</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600">Waktu Pulang</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabel-body" class="divide-y divide-gray-200">
-                        <!-- Data absensi akan ditambahkan di sini secara dinamis -->
-                    </tbody>
-                </table>
-            </div>
-        </main>
+<body>
+  <header>
+    <div class="row" role="banner" aria-label="Header">
+      <strong>Absensi Siswa — Pindai Barcode</strong>
+      <span class="badge" id="badge-env" title="Status koneksi Supabase">Offline</span>
+      <span class="badge" id="badge-camera" title="Status kamera">Kamera: nonaktif</span>
+      <span class="right muted" id="clock" aria-live="polite">--:--</span>
     </div>
+  </header>
 
-    <script type="module">
-        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-        import Quagga from 'https://esm.sh/quagga@1.2.1';
+  <main>
+    <section class="wrap" aria-label="Panel Kontrol">
+      <div class="card">
+        <div class="row">
+          <div class="field">
+            <label for="project-url">Project URL</label>
+            <input id="project-url" name="project-url" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off" />
+          </div>
+          <div class="field" style="min-width: 340px;">
+            <label for="anon-key">Anon Key</label>
+            <input id="anon-key" name="anon-key" type="password" placeholder="SUPABASE_ANON_KEY" />
+          </div>
 
-        // ====================================================================
-        // PENTING: PENGATURAN SUPABASE
-        // Kode ini membutuhkan dua tabel di database Supabase Anda: 'siswa' dan 'absensi'.
-        // Anda dapat menggunakan SQL berikut di "SQL Editor" di dashboard Supabase Anda.
-        // Ganti <PROJECT_REF> dan <ANON_PUBLIC_KEY> dengan kredensial proyek Anda.
-        // ====================================================================
+          <button class="btn primary" id="btnConnect" aria-controls="badge-env">Sambungkan Supabase</button>
+          <button class="btn" id="btnDisconnect">Putuskan</button>
 
-        // 1. SKEMA TABEL SISWA
-        // Tabel ini menyimpan data siswa (ID barcode dan nama).
-        // Anda perlu mengisi tabel ini dengan data siswa Anda.
-        //
-        // create table siswa (
-        //   id varchar(255) primary key,
-        //   nama varchar(255) not null
-        // );
+          <span class="badge" id="sync-indicator" title="Sinkronisasi data">Sync idle</span>
+        </div>
+        <div class="row" style="margin-top: 8px;">
+          <button class="btn primary" id="btnStart" aria-controls="preview">Mulai Scan</button>
+          <button class="btn" id="btnStop">Stop Scan</button>
 
-        // 2. SKEMA TABEL ABSENSI
-        // Tabel ini akan mencatat setiap absensi.
-        // Fungsi absensi memiliki 'unique constraint' untuk mencegah absensi ganda
-        // pada hari yang sama.
-        //
-        // create table absensi (
-        //   id uuid primary key default gen_random_uuid(),
-        //   siswa_id varchar(255) references siswa(id),
-        //   jenis text,
-        //   waktu timestamp with time zone default timezone('Asia/Jakarta'::text, now()),
-        //   scanner text
-        // );
-        //
-        // -- Tambahkan 'unique constraint' untuk mencegah duplikat harian
-        // alter table absensi add constraint absensi_unique_pagi_pulang unique (siswa_id, jenis, (date(waktu)));
+          <div class="field">
+            <label for="cameraSelect">Kamera</label>
+            <select id="cameraSelect" name="cameraSelect" aria-label="Pilih kamera"></select>
+          </div>
 
-        // 3. ATUR KREDENSIAL SUPABASE ANDA DI SINI
-        const SUPABASE_URL  = 'https://rhykjbefaojfjwyaouogc.supabase.co';
-        const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoeWtqYmVmYW9qZmp3eWF1b2djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ4OTU2NTMsImV4cCI6MjA3MDQ3MTY1M30.PkjhntpOBdiDnRPBflSYMnd0zbNwpfXBu-g3AFsiTA0';
-        const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+          <div class="field">
+            <label for="manualInput">Input Manual</label>
+            <input id="manualInput" name="manualInput" type="text" inputmode="numeric" placeholder="Masukkan NIS / Kode" />
+          </div>
+          <button class="btn" id="btnSubmitManual">Submit</button>
 
-        const elHasil = document.getElementById('hasil');
-        const tbody   = document.getElementById('tabel-body');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const absensiPulangBtn = document.getElementById('absensi-pulang-btn');
-        const messageBox = document.getElementById('message-box');
+          <span class="right muted">Tip: tekan <kbd>Enter</kbd> untuk submit manual.</span>
+        </div>
+      </div>
+    </section>
 
-        let isScanning = false;
+    <section class="grid-2" aria-label="Scanner & Ringkasan">
+      <div class="card" aria-labelledby="scanner-title">
+        <h2 id="scanner-title" class="sr-only">Pratinjau Scanner</h2>
+        <video id="preview" playsinline muted></video>
+        <div class="row" style="margin-top: 8px;">
+          <div class="badge" id="last-scan">Terakhir: —</div>
+          <div class="badge" id="match-status">Status: —</div>
+          <div class="badge" id="absen-mode">Mode: Masuk</div>
+          <button class="btn warn" id="btnToggleMode" aria-controls="absen-mode">Ganti ke Pulang</button>
+        </div>
+      </div>
 
-        function showMessage(msg, type = 'error') {
-            messageBox.textContent = msg;
-            messageBox.className = `mt-4 p-3 w-full rounded-lg block ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 5000);
-        }
+      <div class="card" aria-labelledby="ringkasan-title">
+        <h2 id="ringkasan-title">Ringkasan Hari Ini</h2>
+        <div class="row">
+          <div class="badge" id="count-masuk">Masuk: 0</div>
+          <div class="badge" id="count-pulang">Pulang: 0</div>
+          <div class="badge" id="count-unique">Unik: 0</div>
+          <div class="right table-tools">
+            <div class="field">
+              <input id="search" type="search" placeholder="Cari nama / ID…" aria-label="Pencarian" />
+            </div>
+            <div class="field">
+              <label for="filterKelas">Kelas</label>
+              <select id="filterKelas">
+                <option value="">Semua</option>
+              </select>
+            </div>
+            <button class="btn" id="btnExport">Export CSV</button>
+            <button class="btn" id="btnClear">Bersihkan Tabel</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        async function absenClient(siswaId, jenis = 'pagi') {
-            elHasil.textContent = `Pindai: ${siswaId}`;
+    <section class="card" aria-label="Tabel Absensi">
+      <div class="row" style="margin-bottom: 8px;">
+        <strong>Data Absensi</strong>
+        <span class="badge">Tanggal: <span id="tanggal-hari-ini">—</span></span>
+        <span class="badge">Total Baris: <span id="total-rows">0</span></span>
+      </div>
 
-            // Insert data ke database
-            try {
-                const { data, error } = await sb
-                    .from('absensi')
-                    .insert({ siswa_id: siswaId, jenis, scanner: navigator.userAgent })
-                    .select('waktu, jenis')
-                    .maybeSingle();
+      <div style="overflow:auto;">
+        <table aria-describedby="tabel-keterangan">
+          <caption id="tabel-keterangan" class="sr-only">
+            Tabel absensi siswa yang memuat kolom nomor, ID siswa, nama, kelas, jam masuk, jam pulang, status, dan keterangan.
+          </caption>
+          <thead>
+            <tr>
+              <th style="width:64px;">No.</th>
+              <th>ID Siswa</th>
+              <th>Nama</th>
+              <th>Kelas</th>
+              <th>Jam Masuk</th>
+              <th>Jam Pulang</th>
+              <th>Status</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-absen">
+            <!-- Baris data di-render via template -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-                if (error) {
-                    // Jika ada error unik (duplikasi), tampilkan pesan yang ramah pengguna
-                    if (error.code === '23505') {
-                        showMessage(`Absensi siswa ID ${siswaId} untuk waktu ${jenis} sudah tercatat hari ini.`, 'warning');
-                    } else {
-                        showMessage(`Error saat absen: ${error.message}`);
-                    }
-                    return;
-                }
-                showMessage(`Absensi siswa ID ${siswaId} berhasil dicatat!`, 'success');
+  <footer>
+    <div class="row" style="padding: 10px 16px;">
+      <span class="muted">© <span id="year"></span> Sistem Absensi Barcode — Supabase</span>
+      <span class="right muted" id="version">v0.0.0</span>
+    </div>
+  </footer>
 
-                const jam = new Date().toLocaleTimeString('id-ID');
-                const status = data ? 'OKE' : 'SUDAH ADA';
+  <!-- TEMPLATES -->
+  <template id="row-template">
+    <tr>
+      <td class="col-no"></td>
+      <td class="col-id"></td>
+      <td class="col-nama"></td>
+      <td class="col-kelas"></td>
+      <td class="col-jam-masuk"></td>
+      <td class="col-jam-pulang"></td>
+      <td class="col-status"></td>
+      <td class="col-ket"></td>
+    </tr>
+  </template>
 
-                // Ambil nama siswa
-                const { data: siswa, error: eS } = await sb
-                    .from('siswa').select('nama').eq('id', siswaId).maybeSingle();
-                const nama = siswa?.nama ?? '-';
+  <!-- DIALOG: Konfirmasi Absen Pulang -->
+  <dialog id="dlgPulang">
+    <div class="card">
+      <h3>Konfirmasi Absen Pulang</h3>
+      <p id="dlgPulangText" class="muted">Pastikan data yang diabsen sudah benar.</p>
+      <div class="row" style="margin-top: 8px;">
+        <button class="btn" id="btnCancelPulang">Batal</button>
+        <button class="btn primary right" id="btnOkPulang">Lanjut</button>
+      </div>
+    </div>
+  </dialog>
 
-                // Render baris ke tabel
-                if (tbody) {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="py-2 px-4 whitespace-nowrap">${tbody.children.length + 1}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">${siswaId}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">${nama}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">${jenis === 'pagi' ? `${jam} (${status})` : ''}</td>
-                        <td class="py-2 px-4 whitespace-nowrap">${jenis === 'pulang' ? `${jam} (${status})` : ''}</td>
-                    `;
-                    tbody.prepend(tr);
-                }
-            } catch (err) {
-                showMessage(`Terjadi kesalahan: ${err.message}`);
-            }
-        }
+  <!-- TOAST -->
+  <div id="toast" class="toast" role="status" aria-live="polite">Tersimpan.</div>
 
-        function startScanner() {
-            if (isScanning) return;
-            isScanning = true;
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    target: document.querySelector('#interactive'),
-                    constraints: {
-                        facingMode: "environment" // Gunakan kamera belakang pada ponsel
-                    }
-                },
-                decoder: {
-                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader", "code_39_vin_reader", "codabar_reader", "upc_reader", "upc_e_reader", "i2of5_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    showMessage(`Gagal memulai kamera: ${err}`);
-                    console.error(err);
-                    return;
-                }
-                Quagga.start();
-            });
+  <!-- STRUKTUR ID/ELEMEN UNTUK IMPLEMENTASI LOGIKA -->
+  <!--
+    Supabase:
+      - #project-url, #anon-key, #btnConnect, #btnDisconnect, #badge-env, #sync-indicator
+      - Tabel yang terlibat (contoh): public.siswa (id, nama, kelas), public.absensi (siswa_id, tgl, jam_masuk, jam_pulang, status, ket)
+    Scanner:
+      - #btnStart, #btnStop, #cameraSelect, #preview, #last-scan, #match-status
+    Mode:
+      - #absen-mode, #btnToggleMode (Masuk/Pulang)
+    Tabel:
+      - #tbody-absen dengan <template id="row-template">
+      - Kolom: No, ID Siswa, Nama, Kelas, Jam Masuk, Jam Pulang, Status, Keterangan
+      - Kontrol: #search, #filterKelas, #btnExport, #btnClear
+    Dialog & Toast:
+      - #dlgPulang, #btnOkPulang, #btnCancelPulang, #toast
+    Lain:
+      - #clock, #tanggal-hari-ini, #total-rows, #year, #version
+  -->
 
-            Quagga.onDetected(function(result) {
-                const code = result.codeResult.code;
-                if (code) {
-                    console.log("Barcode terdeteksi: ", code);
-                    absenClient(code, 'pagi');
-                    // Menghentikan pemindaian setelah berhasil
-                    Quagga.stop();
-                    isScanning = false;
-                }
-            });
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-        }
-
-        function stopScanner() {
-            if (!isScanning) return;
-            Quagga.stop();
-            isScanning = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-        }
-
-        startBtn.addEventListener('click', startScanner);
-        stopBtn.addEventListener('click', stopScanner);
-
-        // Contoh absen pulang
-        absensiPulangBtn.addEventListener('click', () => {
-            const demoId = "123456789"; // Ganti dengan ID barcode demo
-            absenClient(demoId, 'pulang');
-        });
-
-        // Pastikan Quagga diinisialisasi ulang jika jendela diubah ukurannya
-        window.addEventListener('resize', () => {
-            if (isScanning) {
-                stopScanner();
-                startScanner();
-            }
-        });
-    </script>
+  <!-- HOOKS SCRIPT (isi saat implementasi) -->
+  <!--
+  <script>
+    // 1) Init jam & tanggal
+    // 2) Koneksi Supabase (window.supabase = createClient(url, key))
+    // 3) Load master siswa -> cache Map(id -> {nama, kelas})
+    // 4) ZXing BrowserMultiFormatReader untuk kamera & decode
+    // 5) On hasil scan/manual:
+    //    - Cocokkan ID di cache siswa
+    //    - Tentukan mode (Masuk/Pulang), validasi duplikat di hari yang sama (cek absensi)
+    //    - Tampilkan hasil di #match-status dan render/ubah baris di #tbody-absen
+    //    - Simpan ke tabel absensi via supabase.from('absensi').upsert(...)
+    // 6) Realtime (opsional): channel.on('postgres_changes', ...) untuk update tabel
+    // 7) Export CSV dari isi tabel; Clear untuk reset tampilan (tanpa hapus DB)
+  </script>
+  -->
 </body>
 </html>
