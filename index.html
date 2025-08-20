@@ -2,127 +2,282 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Absensi Barcode Siswa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Absensi Barcode</title>
   <script src="https://unpkg.com/@zxing/library@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f8; text-align: center; }
-    h1 { color: #2c3e50; }
-    video { width: 90%; max-width: 480px; border: 4px solid #3498db; border-radius: 12px; margin: 20px 0; }
-    table { width: 90%; margin: 20px auto; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background: #3498db; color: white; }
-    tr:nth-child(even) { background: #ecf0f1; }
-    #result { font-weight: bold; margin: 10px; color: #27ae60; }
-    #debug { color: #e67e22; }
+    /* Styling dasar menggunakan Tailwind CSS-like principles */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      color: #2c3e50;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-top: 24px;
+    }
+    h1 {
+      color: #3498db;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    video {
+      width: 100%;
+      max-width: 480px;
+      border: 4px solid #3498db;
+      border-radius: 12px;
+      margin: 20px auto;
+      display: block;
+    }
+    .status-message {
+      font-weight: bold;
+      margin-bottom: 16px;
+      text-align: center;
+      min-height: 24px;
+    }
+    #result {
+      color: #27ae60;
+    }
+    #error {
+      color: #e74c3c;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #3498db;
+      color: white;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background: #ecf0f1;
+    }
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .container { padding: 16px; }
+    }
   </style>
 </head>
 <body>
-  <h1>📷 Absensi Barcode</h1>
-  <video id="video" playsinline autoplay></video>
-  <p id="result">Menunggu scan...</p>
-  <p id="debug"></p>
+  <div class="container">
+    <h1>📷 Absensi Barcode Siswa</h1>
+    <video id="video" playsinline autoplay></video>
+    <div class="status-message">
+      <p id="result">Memuat kamera...</p>
+      <p id="error" style="color: #e74c3c;"></p>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>NISN</th>
-        <th>Nama</th>
-        <th>Status</th>
-        <th>Waktu</th>
-      </tr>
-    </thead>
-    <tbody id="absen-table"></tbody>
-  </table>
+    <h2>Riwayat Absensi Hari Ini</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>NISN</th>
+            <th>Nama</th>
+            <th>Status</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="absen-table">
+          <!-- Riwayat absensi akan diisi di sini oleh JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
 <script>
-  // === KONFIGURASI SUPABASE ===
+  // ===================================
+  // === KONFIGURASI DAN INISIALISASI ===
+  // ===================================
+
+  // Ganti dengan URL dan KEY Supabase Anda.
+  // Lebih aman jika ini ditaruh di file terpisah (misalnya config.js)
+  // dan ditambahkan ke .gitignore agar tidak ter-push ke GitHub.
   const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
   const SUPABASE_KEY = "YOUR-ANON-KEY";
   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const videoElement = document.getElementById("video");
   const resultEl = document.getElementById("result");
-  const debugEl = document.getElementById("debug");
+  const errorEl = document.getElementById("error");
   const tableBody = document.getElementById("absen-table");
 
   const codeReader = new ZXing.BrowserMultiFormatReader();
   let lastScanned = "";
   let lastScanTime = 0;
-  const SCAN_COOLDOWN_MS = 3000; // 3 detik
+  const SCAN_COOLDOWN_MS = 3000; // Cooldown 3 detik untuk mencegah scan ganda
 
-  // Fungsi catat absensi
-  async function prosesAbsensi(nisn) {
+  // ===================================
+  // === FUNGSI-FUNGSI UTAMA ===
+  // ===================================
+
+  // Fungsi untuk memuat riwayat absensi dari Supabase
+  async function fetchAttendanceHistory() {
     try {
-      let { data: siswa, error } = await supabase
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("absensi")
+        .select("*")
+        .gte("waktu", today + "T00:00:00")
+        .lte("waktu", today + "T23:59:59")
+        .order("waktu", { ascending: false });
+
+      if (error) throw error;
+      
+      renderAttendanceTable(data);
+    } catch (err) {
+      console.error("Gagal mengambil riwayat absensi:", err);
+      errorEl.textContent = "Gagal memuat riwayat absensi.";
+    }
+  }
+
+  // Fungsi untuk mencatat absensi
+  async function prosesAbsensi(nisn) {
+    // Abaikan scan jika masih dalam periode cooldown
+    const now = Date.now();
+    if (nisn === lastScanned && (now - lastScanTime) < SCAN_COOLDOWN_MS) {
+      resultEl.textContent = "Baru saja discan. Mohon tunggu...";
+      return;
+    }
+    
+    // Perbarui status scan terakhir
+    lastScanned = nisn;
+    lastScanTime = now;
+    
+    resultEl.textContent = "Memproses absensi...";
+    errorEl.textContent = "";
+
+    try {
+      // 1. Ambil data siswa berdasarkan NISN
+      const { data: siswa, error: siswaError } = await supabase
         .from("siswa")
         .select("nama")
         .eq("nisn", nisn)
         .single();
 
-      if (error || !siswa) {
-        resultEl.textContent = "❌ NISN tidak ditemukan di database";
-        return;
+      if (siswaError || !siswa) {
+        throw new Error("NISN tidak ditemukan di database.");
       }
 
-      const today = new Date().toISOString().slice(0,10);
-      let { data: absenHariIni } = await supabase
+      // 2. Cek apakah siswa sudah absen hari ini
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: absenHariIni, error: absenError } = await supabase
         .from("absensi")
-        .select("*")
+        .select("status")
         .eq("nisn", nisn)
         .gte("waktu", today + "T00:00:00")
-        .lte("waktu", today + "T23:59:59");
+        .lte("waktu", today + "T23:59:59")
+        .order("waktu", { ascending: false })
+        .limit(1);
 
       let status = "Check-in";
-      if (absenHariIni && absenHariIni.length > 0) {
+      if (absenHariIni && absenHariIni.length > 0 && absenHariIni[0].status === "Check-in") {
         status = "Check-out";
       }
 
-      const waktu = new Date().toLocaleString();
-      await supabase.from("absensi").insert([
+      // 3. Masukkan data absensi baru
+      const { error: insertError } = await supabase.from("absensi").insert([
         { nisn: nisn, nama: siswa.nama, status: status, waktu: new Date().toISOString() }
       ]);
+      
+      if (insertError) throw insertError;
 
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${nisn}</td>
-        <td>${siswa.nama}</td>
-        <td>${status}</td>
-        <td>${waktu}</td>`;
-      tableBody.prepend(row);
+      resultEl.textContent = `✅ Absensi ${siswa.nama} berhasil (${status})!`;
 
-      resultEl.textContent = `✅ ${siswa.nama} (${nisn}) ${status} berhasil`;
+      // Perbarui riwayat absensi
+      fetchAttendanceHistory();
+
     } catch (err) {
-      console.error(err);
-      debugEl.textContent = "⚠️ Gagal memproses absensi";
+      console.error("Gagal mencatat absensi:", err);
+      errorEl.textContent = `❌ Gagal: ${err.message || 'Terjadi kesalahan.'}`;
     }
   }
 
-  // Inisialisasi kamera (pilih kamera belakang bila ada)
-  codeReader.listVideoInputDevices().then(devices => {
-    if (!devices.length) {
-      debugEl.textContent = "❌ Kamera tidak ditemukan";
+  // Fungsi untuk menampilkan data ke tabel
+  function renderAttendanceTable(data) {
+    tableBody.innerHTML = ""; // Bersihkan tabel
+    if (data.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="4">Belum ada absensi hari ini.</td></tr>';
       return;
     }
-    const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
-    codeReader.decodeFromVideoDevice(cam.deviceId, videoElement, (resultObj, err) => {
-      if (resultObj) {
-        const nisn = resultObj.text.trim();
-        const now = Date.now();
-        if (nisn !== lastScanned || now - lastScanTime > SCAN_COOLDOWN_MS) {
-          lastScanned = nisn;
-          lastScanTime = now;
-          resultEl.textContent = `🔍 Terbaca NISN: ${nisn}`;
-          prosesAbsensi(nisn);
-        }
-      } else if (err && !(err instanceof ZXing.NotFoundException)) {
-        debugEl.textContent = "⚠️ Error scan: " + err;
-      }
+    data.forEach(item => {
+      const row = document.createElement("tr");
+      const waktuLokal = new Date(item.waktu).toLocaleTimeString("id-ID", {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      });
+      row.innerHTML = `
+        <td>${item.nisn}</td>
+        <td>${item.nama}</td>
+        <td>${item.status}</td>
+        <td>${waktuLokal}</td>
+      `;
+      tableBody.appendChild(row);
     });
-  }).catch(err => {
-    debugEl.textContent = "⚠️ Gagal akses kamera: " + err;
-    console.error(err);
+  }
+
+  // ===================================
+  // === INISIALISASI KAMERA & SCANNER ===
+  // ===================================
+
+  // Mulai kamera saat halaman dimuat
+  window.addEventListener('load', () => {
+    codeReader.listVideoInputDevices()
+      .then((videoInputDevices) => {
+        let selectedDeviceId = null;
+        if (videoInputDevices.length > 1) {
+          // Prioritaskan kamera belakang jika tersedia
+          const backCamera = videoInputDevices.find(device => device.label.toLowerCase().includes('back'));
+          selectedDeviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+        } else if (videoInputDevices.length === 1) {
+          selectedDeviceId = videoInputDevices[0].deviceId;
+        }
+
+        if (selectedDeviceId) {
+          codeReader.decodeFromVideoDevice(selectedDeviceId, 'video', (result, err) => {
+            if (result) {
+              console.log("Barcode terdeteksi:", result.text);
+              prosesAbsensi(result.text);
+            }
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+              console.error("Kesalahan scanner:", err);
+              errorEl.textContent = `Error: ${err.message}`;
+            }
+          });
+          resultEl.textContent = "Kamera aktif, siap untuk scan.";
+        } else {
+          resultEl.textContent = "Tidak ada perangkat kamera yang ditemukan.";
+          console.error("Tidak ada perangkat kamera yang ditemukan.");
+        }
+      })
+      .catch((err) => {
+        console.error("Gagal mengakses kamera:", err);
+        errorEl.textContent = "Gagal mengakses kamera. Pastikan izin kamera diberikan.";
+      });
+
+    // Muat riwayat absensi saat halaman dimuat
+    fetchAttendanceHistory();
   });
 </script>
+
 </body>
 </html>
