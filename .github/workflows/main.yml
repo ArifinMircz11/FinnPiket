@@ -1,48 +1,25 @@
 # .github/workflows/deploy.yml
-name: Build and Deploy
+name: Deploy Static Site
 
 on:
   push:
     branches:
-      - main   # jalankan workflow hanya kalau ada push ke branch main
-  workflow_dispatch:  # bisa juga manual trigger
+      - main   # setiap kali push ke branch main
+  workflow_dispatch:  # bisa juga dijalankan manual
 
 jobs:
-  build-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      # Kalau ada proses build (npm install + npm run build)
-      # Kalau cuma html+js statis, langkah ini bisa dilewati.
-      - name: Install dependencies
-        run: |
-          if [ -f package.json ]; then
-            npm install
-          fi
-
-      - name: Build project
-        run: |
-          if [ -f package.json ]; then
-            npm run build
-          else
-            echo "Tidak ada proses build, lanjut ke deploy."
-          fi
-
-      - name: Report build status
-        run: echo "✅ Build selesai tanpa error."
+      - name: Report status
+        run: echo "✅ File statis siap dideploy"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist   # kalau ada build output
-          # kalau hanya file statis di root repo:
-          # publish_dir: .
+          publish_dir: .   # root repo berisi index.html
