@@ -1,0 +1,59 @@
+# Nama dari workflow (alur kerja) ini.
+# Akan ditampilkan di tab "Actions" pada repositori GitHub Anda.
+name: Deploy Website to GitHub Pages
+
+# Menentukan event yang akan memicu workflow ini.
+# Workflow akan berjalan setiap kali ada commit yang di-push ke cabang 'main'.
+on:
+  push:
+    branches:
+      - main
+  # Ini memungkinkan Anda menjalankan workflow ini secara manual dari
+  # tab "Actions" di GitHub.
+  workflow_dispatch:
+
+# Memberikan izin yang diperlukan untuk job ini.
+# 'contents: read' untuk membaca file dari repositori.
+# 'pages: write' untuk menulis ke GitHub Pages.
+# 'id-token: write' diperlukan oleh tindakan 'deploy-pages'.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Definisi job tunggal yang akan menjalankan semua langkah deployment.
+jobs:
+  # Nama job ini.
+  build-and-deploy:
+    # Menjalankan job pada runner (server virtual) Ubuntu terbaru.
+    runs-on: ubuntu-latest
+    
+    # Kumpulan langkah-langkah yang akan dieksekusi secara berurutan.
+    steps:
+      # Langkah 1: Checkout kode dari repositori.
+      # Ini adalah langkah standar untuk membuat kode tersedia di runner.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Langkah 2: Menyiapkan GitHub Pages.
+      # Mengkonfigurasi lingkungan runner untuk deployment Pages.
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      # Langkah 3: Mengunggah artefak.
+      # Mengambil semua file dari root direktori proyek (`./`)
+      # dan menyiapkannya sebagai artefak untuk di-deploy.
+      # Kode HTML, JS, dan file lainnya akan diunggah.
+      - name: Upload website artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Direktori yang akan di-deploy.
+          # Karena file Anda ada di root, gunakan './'
+          path: './'
+
+      # Langkah 4: Melakukan deployment.
+      # Menerbitkan artefak yang diunggah ke GitHub Pages.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
