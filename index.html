@@ -19,7 +19,7 @@
 </head>
 <body>
   <h1>📷 Absensi Barcode</h1>
-  <video id="video" playsinline></video>
+  <video id="video" playsinline autoplay></video>
   <p id="result">Menunggu scan...</p>
   <p id="debug"></p>
 
@@ -54,7 +54,6 @@
   // Fungsi catat absensi
   async function prosesAbsensi(nisn) {
     try {
-      // Ambil nama dari tabel siswa
       let { data: siswa, error } = await supabase
         .from("siswa")
         .select("nama")
@@ -66,8 +65,7 @@
         return;
       }
 
-      // Cek apakah sudah pernah absen hari ini
-      const today = new Date().toISOString().slice(0,10); // format YYYY-MM-DD
+      const today = new Date().toISOString().slice(0,10);
       let { data: absenHariIni } = await supabase
         .from("absensi")
         .select("*")
@@ -80,13 +78,11 @@
         status = "Check-out";
       }
 
-      // Simpan ke tabel absensi
       const waktu = new Date().toLocaleString();
       await supabase.from("absensi").insert([
         { nisn: nisn, nama: siswa.nama, status: status, waktu: new Date().toISOString() }
       ]);
 
-      // Tampilkan ke tabel
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${nisn}</td>
@@ -102,19 +98,14 @@
     }
   }
 
-  // Inisialisasi kamera
-codeReader.listVideoInputDevices().then(devices => {
-  if (!devices.length) {
-    debugEl.textContent = "❌ Kamera tidak ditemukan";
-    return;
-  }
-  const camId = devices[0].deviceId;
-  codeReader.decodeFromVideoDevice(camId, videoElement, (resultObj, err) => {
-    ...
-  }
-}
-    const camId = devices[0].deviceId;
-    codeReader.decodeFromVideoDevice(camId, videoElement, (resultObj, err) => {
+  // Inisialisasi kamera (pilih kamera belakang bila ada)
+  codeReader.listVideoInputDevices().then(devices => {
+    if (!devices.length) {
+      debugEl.textContent = "❌ Kamera tidak ditemukan";
+      return;
+    }
+    const cam = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
+    codeReader.decodeFromVideoDevice(cam.deviceId, videoElement, (resultObj, err) => {
       if (resultObj) {
         const nisn = resultObj.text.trim();
         const now = Date.now();
