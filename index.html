@@ -1,178 +1,319 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistem Absensi Supabase</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    body{font-family:'Inter',sans-serif;background:#f3f4f6}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Scan Absensi Siswa</title>
+    
+    <!-- Library untuk QR/Barcode Scanner -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    
+    <!-- Library Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+            text-align: center;
+        }
+        video {
+            width: 90%;
+            max-width: 480px;
+            border: 4px solid #3498db;
+            border-radius: 12px;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        #result {
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        #status {
+            color: green;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 14px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            text-align: center;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        .button-group {
+            margin-top: 20px;
+        }
+        .button-group button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        #delete-all-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
 </head>
-<body class="p-4 md:p-8">
-  <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">Sistem Absensi</h1>
-    <p class="text-gray-500 mb-6 text-center">Aplikasi absensi sederhana menggunakan Supabase dan GitHub Pages.</p>
+<body>
+    <h1>📷 Scan Absensi Siswa</h1>
+    <video id="video" playsinline></video>
+    <p>Barcode Terbaca: <span id="result">-</span></p>
+    <p id="status"></p>
 
-    <!-- Form Pemindaian -->
-    <div class="flex flex-col items-center mb-6 p-6 bg-blue-50 rounded-lg border border-blue-200">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Simulasi Pemindaian ID</h2>
-      <div class="flex w-full max-w-sm gap-2">
-        <input id="barcodeInput" type="text" placeholder="Masukkan ID siswa (contoh: 24001)" class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-        <select id="jenisAbsenSelect" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="pagi">Pagi</option>
-          <option value="pulang">Pulang</option>
-        </select>
-        <button id="scanButton" class="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md">Pindai</button>
-      </div>
-      <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+    <div class="button-group">
+        <button id="delete-all-btn">Hapus Semua Data Absensi</button>
     </div>
 
-    <!-- Dashboard -->
-    <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Dashboard Realtime Absensi</h2>
-      <div class="overflow-x-auto rounded-lg shadow-sm">
-        <table class="min-w-full bg-white border border-gray-200">
-          <thead class="bg-gray-100">
+    <h2>📋 Tabel Absensi</h2>
+    <table>
+        <thead>
             <tr>
-              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Waktu</th>
-              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Nama Siswa</th>
-              <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Jenis</th>
+                <th>No</th>
+                <th>ID Card</th>
+                <th>Nama</th>
+                <th>Pagi</th>
+                <th>Pulang</th>
+                <th>Aksi</th>
             </tr>
-          </thead>
-          <tbody id="absensiTableBody" class="divide-y divide-gray-200"></tbody>
-        </table>
-      </div>
-      <p id="loadingIndicator" class="text-center text-gray-500 mt-4 text-sm hidden">Memuat data...</p>
-    </div>
-  </div>
+        </thead>
+        <tbody id="tabel-hasil"></tbody>
+    </table>
 
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    <!-- Skrip Data Siswa (Pastikan file ini ada di folder yang sama) -->
+    <script src="data-siswa.js"></script>
 
-    // === GANTI dengan kredensial Supabase kamu ===
-    const SUPABASE_URL = 'https://<PROJECT_REF>.supabase.co';
-    const SUPABASE_ANON_KEY = '<ANON_PUBLIC_KEY>';
-    // =============================================
+    <script>
+        // =================================================================
+        //                 KONFIGURASI SUPABASE
+        // =================================================================
+        // ERROR 'Failed to fetch' ini biasanya terjadi jika URL atau Anon Key salah,
+        // atau jika ada masalah dengan CORS. PASTIKAN UNTUK MENGGANTI NILAI DI BAWAH INI
+        // DENGAN URL DAN KUNCI DARI PROYEK SUPABASE ANDA YANG SEBENARNYA.
+        const SUPABASE_URL = 'https://rhykjbefaojfjwyaouogc.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_J1-LPxsXBL4S-991TZuKWg_HM3EdEwz';
+        
+        // Perbaikan untuk ReferenceError
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // =================================================================
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const statusMessage = document.getElementById('statusMessage');
+        const statusElement = document.getElementById('status');
+        const resultElement = document.getElementById('result');
+        const tabelHasil = document.getElementById('tabel-hasil');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
 
-      if (SUPABASE_URL.includes('<PROJECT_REF>') || SUPABASE_ANON_KEY.includes('<ANON_PUBLIC_KEY>')) {
-        statusMessage.textContent = 'ERROR: Ganti SUPABASE_URL dan ANON KEY.';
-        statusMessage.className = 'mt-4 text-center text-sm font-medium text-red-600';
-        return;
-      }
-
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      // UI
-      const barcodeInput = document.getElementById('barcodeInput');
-      const jenisAbsenSelect = document.getElementById('jenisAbsenSelect');
-      const scanButton = document.getElementById('scanButton');
-      const absensiTableBody = document.getElementById('absensiTableBody');
-      const loadingIndicator = document.getElementById('loadingIndicator');
-
-      function showStatus(msg, isErr=false){
-        statusMessage.textContent = msg;
-        statusMessage.className = `mt-4 text-center text-sm font-medium ${isErr ? 'text-red-600':'text-green-600'}`;
-      }
-
-      // === INSERT langsung ke tabel absensi (tanpa RPC) ===
-      async function absenLangsung(siswaId, jenis){
-        // validasi siswa ada
-        const { data: siswa, error: eSiswa } = await supabase
-          .from('siswa').select('nama').eq('id', siswaId).maybeSingle();
-        if (eSiswa || !siswa){
-          return { status:'error', message:'ID siswa tidak ditemukan.' };
+        // Fungsi untuk merender baris tabel dari data Supabase
+        function renderRow(record) {
+            let row = document.getElementById(`row-${record.siswa_id}`);
+            if (!row) {
+                row = document.createElement('tr');
+                row.id = `row-${record.siswa_id}`;
+                const rowCount = tabelHasil.querySelectorAll('tr').length + 1;
+                row.innerHTML = `
+                    <td>${rowCount}</td>
+                    <td>${record.siswa_id}</td>
+                    <td>${record.nama}</td>
+                    <td id="pagi-${record.siswa_id}">${record.pagi ? new Date(record.pagi).toLocaleTimeString('id-ID') : '-'}</td>
+                    <td id="pulang-${record.siswa_id}">${record.pulang ? new Date(record.pulang).toLocaleTimeString('id-ID') : '-'}</td>
+                    <td><button class="delete-btn" onclick="hapusAbsensi('${record.siswa_id}')">Hapus</button></td>
+                `;
+                tabelHasil.appendChild(row);
+            } else {
+                const pagiCell = document.getElementById(`pagi-${record.siswa_id}`);
+                const pulangCell = document.getElementById(`pulang-${record.siswa_id}`);
+                if (record.pagi) pagiCell.textContent = new Date(record.pagi).toLocaleTimeString('id-ID');
+                if (record.pulang) pulangCell.textContent = new Date(record.pulang).toLocaleTimeString('id-ID');
+            }
         }
 
-        // insert; jika duplikat harian → 23505
-        const { data, error } = await supabase
-          .from('absensi')
-          .insert({ siswa_id: siswaId, jenis, scanner: navigator.userAgent })
-          .select('waktu, jenis')
-          .maybeSingle();
+        // Fungsi untuk mengambil data absensi dari Supabase saat halaman dimuat
+        async function loadAbsensi() {
+            const { data, error } = await supabase
+                .from('absensi_siswa')
+                .select('*')
+                .order('created_at', { ascending: true });
 
-        if (error){
-          if (error.code === '23505') return { status:'duplikat', message:'Sudah absen hari ini.' };
-          return { status:'error', message:error.message };
+            if (error) {
+                console.error('Gagal memuat data:', error);
+                statusElement.textContent = 'Error saat memuat data.';
+                statusElement.style.color = 'red';
+                return;
+            }
+
+            // Kosongkan tabel sebelum merender ulang
+            tabelHasil.innerHTML = '';
+            data.forEach(renderRow);
         }
-        return { status:'ok', row:{ waktu: data.waktu, jenis: data.jenis, nama: siswa.nama } };
-      }
 
-      // Render baris tabel
-      function renderRow({waktu, nama, jenis}){
-        const tr = document.createElement('tr');
-        const waktuFormatted = new Date(waktu).toLocaleString('id-ID',{
-          year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'
+        // Panggil fungsi untuk memuat data
+        loadAbsensi();
+
+        async function prosesAbsen(scannedId) {
+            const siswa = dataSiswa.find(s => s.id === scannedId);
+
+            if (!siswa) {
+                statusElement.textContent = 'ID tidak ditemukan';
+                statusElement.style.color = 'red';
+                return;
+            }
+
+            const now = new Date();
+            const jam = now.getHours();
+            const waktu = jam < 12 ? 'pagi' : 'pulang';
+
+            // Cari data absensi siswa di Supabase
+            const { data: existingRecord, error: fetchError } = await supabase
+                .from('absensi_siswa')
+                .select('*')
+                .eq('siswa_id', siswa.id)
+                .limit(1)
+                .single();
+
+            if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 berarti "tidak ditemukan"
+                console.error('Error saat mencari record:', fetchError);
+                return;
+            }
+
+            if (existingRecord) {
+                // Jika data sudah ada, perbarui waktu absensinya
+                if (existingRecord[waktu]) {
+                    statusElement.textContent = `Sudah absen ${waktu}`;
+                    statusElement.style.color = 'orange';
+                    return;
+                }
+
+                const updatePayload = {
+                    [waktu]: now.toISOString()
+                };
+
+                const { data, error } = await supabase
+                    .from('absensi_siswa')
+                    .update(updatePayload)
+                    .eq('id', existingRecord.id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Error saat memperbarui data:', error);
+                    return;
+                }
+                renderRow(data);
+                statusElement.textContent = `Absensi ${waktu} berhasil!`;
+                statusElement.style.color = 'green';
+
+            } else {
+                // Jika data belum ada, buat record baru
+                const insertPayload = {
+                    siswa_id: siswa.id,
+                    nama: siswa.nama,
+                    pagi: now.toISOString(),
+                    pulang: null
+                };
+
+                const { data, error } = await supabase
+                    .from('absensi_siswa')
+                    .insert(insertPayload)
+                    .select()
+                    .single();
+                
+                if (error) {
+                    console.error('Error saat menyimpan data:', error);
+                    return;
+                }
+                renderRow(data);
+                statusElement.textContent = `Absensi ${waktu} berhasil!`;
+                statusElement.style.color = 'green';
+            }
+        }
+
+        // Fungsi untuk menghapus satu record berdasarkan ID siswa
+        async function hapusAbsensi(siswaId) {
+            const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus data absensi untuk siswa dengan ID ${siswaId}?`);
+            if (!konfirmasi) return;
+
+            const { error } = await supabase
+                .from('absensi_siswa')
+                .delete()
+                .eq('siswa_id', siswaId);
+
+            if (error) {
+                console.error('Gagal menghapus data:', error);
+                statusElement.textContent = 'Error saat menghapus data.';
+                statusElement.style.color = 'red';
+                return;
+            }
+
+            // Muat ulang tabel untuk menampilkan perubahan
+            loadAbsensi();
+            statusElement.textContent = 'Data berhasil dihapus!';
+            statusElement.style.color = 'green';
+        }
+
+        // Fungsi untuk menghapus semua data absensi
+        async function hapusSemuaAbsensi() {
+            const konfirmasi = confirm('Apakah Anda yakin ingin menghapus SEMUA data absensi? Aksi ini tidak bisa dibatalkan.');
+            if (!konfirmasi) return;
+
+            const { error } = await supabase
+                .from('absensi_siswa')
+                .delete()
+                .neq('siswa_id', 'non-existent-id'); // Menghapus semua baris dengan trik ini
+
+            if (error) {
+                console.error('Gagal menghapus semua data:', error);
+                statusElement.textContent = 'Error saat menghapus semua data.';
+                statusElement.style.color = 'red';
+                return;
+            }
+
+            // Kosongkan tabel di UI dan muat ulang
+            tabelHasil.innerHTML = '';
+            statusElement.textContent = 'Semua data absensi berhasil dihapus!';
+            statusElement.style.color = 'green';
+        }
+
+        // Tambahkan event listener untuk tombol "Hapus Semua"
+        deleteAllBtn.addEventListener('click', hapusSemuaAbsensi);
+
+        // ZXing setup
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+            if (result) {
+                const scannedId = result.text.trim();
+                resultElement.textContent = scannedId;
+                prosesAbsen(scannedId);
+            }
         });
-        const jenisText = jenis.charAt(0).toUpperCase() + jenis.slice(1);
-        tr.className = "hover:bg-gray-50 transition-colors";
-        tr.innerHTML = `
-          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800">${waktuFormatted}</td>
-          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800 font-medium">${nama}</td>
-          <td class="py-3 px-4 whitespace-nowrap text-sm text-gray-800">${jenisText}</td>`;
-        return tr;
-      }
-
-      // Load awal: embed join via FK (siswa:siswa_id)
-      async function loadInitialData(){
-        loadingIndicator.classList.remove('hidden');
-        absensiTableBody.innerHTML = '';
-        const { data, error } = await supabase
-          .from('absensi')
-          .select('waktu, jenis, siswa:siswa_id(nama)')
-          .order('waktu', { ascending: false })
-          .limit(50);
-        if (error){
-          showStatus('Gagal memuat data.', true);
-          loadingIndicator.classList.add('hidden');
-          return;
-        }
-        (data||[]).forEach(item=>{
-          const row = { waktu:item.waktu, jenis:item.jenis, nama:item.siswa?.nama ?? '-' };
-          absensiTableBody.appendChild(renderRow(row));
-        });
-        loadingIndicator.classList.add('hidden');
-      }
-
-      // Realtime: dengarkan INSERT ke absensi
-      function setupRealtime(){
-        supabase.channel('absensi-channel')
-          .on('postgres_changes', { event:'INSERT', schema:'public', table:'absensi' }, async (payload)=>{
-            const rowNew = payload.new; // { siswa_id, waktu, jenis, ... }
-            // ambil nama siswa
-            const { data: siswa } = await supabase
-              .from('siswa').select('nama').eq('id', rowNew.siswa_id).single();
-            const row = { waktu: rowNew.waktu, jenis: rowNew.jenis, nama: siswa?.nama ?? '-' };
-            absensiTableBody.prepend(renderRow(row));
-            if (absensiTableBody.children.length > 50) absensiTableBody.lastChild?.remove();
-          })
-          .subscribe();
-      }
-
-      // Klik Pindai
-      scanButton.addEventListener('click', async ()=>{
-        const id = barcodeInput.value.trim();
-        const jenis = jenisAbsenSelect.value;
-        if (!id){ showStatus('Masukkan ID siswa.', true); return; }
-
-        const res = await absenLangsung(id, jenis);
-        if (res.status === 'ok'){
-          showStatus(`Absensi ${res.row.nama} berhasil.`);
-          barcodeInput.value = '';
-          absensiTableBody.prepend(renderRow(res.row));
-          if (absensiTableBody.children.length > 50) absensiTableBody.lastChild?.remove();
-        } else {
-          showStatus(res.message, true);
-        }
-      });
-
-      loadInitialData();
-      setupRealtime();
-    });
-  </script>
+    </script>
 </body>
 </html>
