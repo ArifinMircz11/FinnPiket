@@ -1,60 +1,48 @@
-# Nama dari workflow (alur kerja) ini.
-# Akan ditampilkan di tab "Actions" pada repositori GitHub Anda.
-name: Deploy Website to GitHub Pages
+# .github/workflows/deploy.yml
+name: Build and Deploy
 
-# Menentukan event yang akan memicu workflow ini.
-# Workflow akan berjalan setiap kali ada commit yang di-push ke cabang 'main'.
 on:
   push:
     branches:
-      - main
-  # Ini memungkinkan Anda menjalankan workflow ini secara manual dari
-  # tab "Actions" di GitHub.
-  workflow_dispatch:
+      - main   # jalankan workflow hanya kalau ada push ke branch main
+  workflow_dispatch:  # bisa juga manual trigger
 
-# Memberikan izin yang diperlukan untuk job ini.
-# 'contents: read' untuk membaca file dari repositori.
-# 'pages: write' untuk menulis ke GitHub Pages.
-# 'id-token: write' diperlukan oleh tindakan 'deploy-pages'.
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Definisi job tunggal yang akan menjalankan semua langkah deployment.
 jobs:
-  # Nama job ini.
-  build-and-deploy:
-    # Menjalankan job pada runner (server virtual) Ubuntu terbaru.
+  build-deploy:
     runs-on: ubuntu-latest
-    
-    # Kumpulan langkah-langkah yang akan dieksekusi secara berurutan.
+
     steps:
-      # Langkah 1: Checkout kode dari repositori.
-      # Ini adalah langkah standar untuk membuat kode tersedia di runner.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # Langkah 2: Menyiapkan GitHub Pages.
-      # Mengkonfigurasi lingkungan runner untuk deployment Pages.
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      # Langkah 3: Mengunggah artefak.
-      # Mengambil semua file dari root direktori proyek (`./`)
-      # dan menyiapkannya sebagai artefak untuk di-deploy.
-      # Kode HTML, JS, dan file lainnya akan diunggah.
-      - name: Upload website artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          # Direktori yang akan di-deploy.
-          # Karena file Anda ada di root, gunakan './'
-          path: './'
+          node-version: 18
 
-      # Langkah 4: Melakukan deployment.
-      # Menerbitkan artefak yang diunggah ke GitHub Pages.
+      # Kalau ada proses build (npm install + npm run build)
+      # Kalau cuma html+js statis, langkah ini bisa dilewati.
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Build project
+        run: |
+          if [ -f package.json ]; then
+            npm run build
+          else
+            echo "Tidak ada proses build, lanjut ke deploy."
+          fi
+
+      - name: Report build status
+        run: echo "✅ Build selesai tanpa error."
+
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-run-name: 
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist   # kalau ada build output
+          # kalau hanya file statis di root repo:
+          # publish_dir: .
