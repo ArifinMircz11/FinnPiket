@@ -1,315 +1,91 @@
-{
-const dataSiswa‎ = [
-    {"id": 24001, "name": "ACHMAD ULYA RAZAN"},
-    {"id": 24002, "name": "ADELLA KHAIRUNNISA"},
-    {"id": 24003, "name": "AGNIA KAMILA NORRAHMAN"},
-    {"id": 24004, "name": "AHMAD AKHTAR ADRI AFANDI"},
-    {"id": 24005, "name": "AHMAD AL HAFIZY"},
-    {"id": 24006, "name": "AHMAD ALFAREZI"},
-    {"id": 24007, "name": "AHMAD ALIF EL HAFIZH"},
-    {"id": 24008, "name": "AHMAD FAHREZI"},
-    {"id": 24009, "name": "AHMAD FAUZAN ZAKI"},
-    {"id": 24010, "name": "AHMAD FIQRI"},
-    {"id": 24011, "name": "AHMAD HABIBI"},
-    {"id": 24012, "name": "AHMAD MUZAKKIR WAHAB"},
-    {"id": 24013, "name": "AHMAD ZIDANI NUZULI"},
-    {"id": 24014, "name": "AIDIL ANSAR"},
-    {"id": 24015, "name": "AINA REHANA"},
-    {"id": 24016, "name": "AKHMAD HABIBIE"},
-    {"id": 24017, "name": "AKHMAD MUZAKKIR"},
-    {"id": 24018, "name": "AKHMAD NORHAKIM"},
-    {"id": 24019, "name": "AKHMAD RIFA'I"},
-    {"id": 24020, "name": "AKHMED RAGIL NUZULI"},
-    {"id": 24021, "name": "AKRAM PANDYA BRATADIKARA"},
-    {"id": 24022, "name": "AL FIRDA ZATUN AZKIA"},
-    {"id": 24023, "name": "ALIEF AHMAD"},
-    {"id": 24024, "name": "ALIEF HUSSEIN FIRDAUS"},
-    {"id": 24025, "name": "ALLIA NORJANNAH"},
-    {"id": 24026, "name": "ALMA SYAHRIDA"},
-    {"id": 24027, "name": "ALYA AZALEA HUMAIRA"},
-    {"id": 24028, "name": "ALYA RASIKHAH ZAHWAH"},
-    {"id": 24029, "name": "AMELIA AZIZAH"},
-    {"id": 24030, "name": "AMELIA RAHMANIAH"},
-    {"id": 24031, "name": "ANDI YUDHA CHANDRA WIRATAMA"},
-    {"id": 24032, "name": "ANDINI PUTRI"},
-    {"id": 24033, "name": "ANIDA RAHMAH"},
-    {"id": 24034, "name": "ANIN DITA APRILA WIJAYA"},
-    {"id": 24035, "name": "ANNA ALTHAFUNNISA"},
-    {"id": 24036, "name": "ANNAS TASHA"},
-    {"id": 24037, "name": "ANNIDA NORHAYAT"},
-    {"id": 24038, "name": "ANNISA KAMAL"},
-    {"id": 24039, "name": "ANNISA NAJIBA"},
-    {"id": 24040, "name": "ANNISA NUR AULIA"},
-    {"id": 24041, "name": "ANNISSA RAHMAN"},
-    {"id": 24042, "name": "APRILIA WULANDARI"},
-    {"id": 24043, "name": "ARIFA AZIZAH"},
-    {"id": 24044, "name": "ASSYIFATUZ ZAHRA"},
-    {"id": 24045, "name": "ASYIFA MAURA"},
-    {"id": 24046, "name": "ASY-SYIFA MELIA"},
-    {"id": 24047, "name": "AULADINA SALSABELA"},
-    {"id": 24048, "name": "AULIA NOR ASYIFA"},
-    {"id": 24049, "name": "AULIA NUR ASIFA"},
-    {"id": 24050, "name": "AULIA RAHMAH"},
-    {"id": 24051, "name": "AUNIKA HILYA AZKIA"},
-    {"id": 24052, "name": "BALQIS LARASATI HADRIYANTO"},
-    {"id": 24053, "name": "DAFI RASIKH"},
-    {"id": 24054, "name": "DAYANG AULIA PUTRI"},
-    {"id": 24055, "name": "DEA SHOFIA"},
-    {"id": 24056, "name": "DENY NORAIDI"},
-    {"id": 24057, "name": "DESSY AMELIA"},
-    {"id": 24058, "name": "DESY ULAN SARI"},
-    {"id": 24059, "name": "DEWINDA SARAH CLARISSA"},
-    {"id": 24060, "name": "DHEA FITRINA"},
-    {"id": 24061, "name": "DINDA NUR FAIZA"},
-    {"id": 24062, "name": "DINI PURNAMA RAMADHANI"},
-    {"id": 24063, "name": "EMARATUL HUDA"},
-    {"id": 24064, "name": "EVA ADINDA RAMADHANI"},
-    {"id": 24065, "name": "FADHILA SALSABILA"},
-    {"id": 24066, "name": "FADYA RAHMAH"},
-    {"id": 24067, "name": "FAIZIA ALYA CITRA"},
-    {"id": 24068, "name": "FAJAR"},
-    {"id": 24069, "name": "FATHIMATUZZAHRA"},
-    {"id": 24070, "name": "FATIMATUZZAHRA (HM)"},
-    {"id": 24071, "name": "FATIMATUZZAHRA (HN)"},
-    {"id": 24072, "name": "FAUZAN HAYUN"},
-    {"id": 24073, "name": "FEBRI ANNISA DANIAL"},
-    {"id": 24074, "name": "FHAHRINA MAIMUNATI"},
-    {"id": 24075, "name": "FIBIA FIRAHMANIAN"},
-    {"id": 24076, "name": "FITRAHUL HASANAH"},
-    {"id": 24077, "name": "FITRIA NUR HANIFA"},
-    {"id": 24078, "name": "GINA RAHMATIKA PUTRI"},
-    {"id": 24079, "name": "GINA SAJIDA"},
-    {"id": 24080, "name": "GT.M.ZAKY MUKADAM"},
-    {"id": 24081, "name": "GUSTI MUHAMMAD RIDHO ALDIANSYAH"},
-    {"id": 24082, "name": "HALISA"},
-    {"id": 24083, "name": "HANIFA ZALFA PUTRI SURYA"},
-    {"id": 24084, "name": "HELYATI SHAFARINA"},
-    {"id": 24085, "name": "HUMAIRAH"},
-    {"id": 24086, "name": "HUSNATUL FITRIAH"},
-    {"id": 24087, "name": "HUSNATUL HASANAH"},
-    {"id": 24088, "name": "IFNI RAFIP SYAHI"},
-    {"id": 24089, "name": "IMELDA SARI"},
-    {"id": 24090, "name": "INDAH HANDAYANI"},
-    {"id": 24091, "name": "ISTIQAMAH FITRIANI"},
-    {"id": 24092, "name": "JAHRI FADLI ALAMSYAH"},
-    {"id": 24093, "name": "KEYLA ZAHRA KHAIRUNNISA"},
-    {"id": 24094, "name": "KHAWARIZMI ANAQIN PASHA"},
-    {"id": 24095, "name": "LAILA RAHMAH"},
-    {"id": 24096, "name": "LILYANA WIDYA ACHORI"},
-    {"id": 24097, "name": "LUTFIA RAHMADINA"},
-    {"id": 24098, "name": "LUTFIA RAHMADINA"},
-    {"id": 24099, "name": "LUTFIA SORAYA"},
-    {"id": 24100, "name": "LUTHFINA"},
-    {"id": 24101, "name": "LUTHFULLAH"},
-    {"id": 24102, "name": "M.ATHAILAH"},
-    {"id": 24103, "name": "M. LUTFI SETIAWAN"},
-    {"id": 24104, "name": "M.DENIS AL FAREZA"},
-    {"id": 24105, "name": "M.HELMI HAMZAH"},
-    {"id": 24106, "name": "MAFAZATUN NAFISAH"},
-    {"id": 24107, "name": "MAHESA YUDISTIRA TANJUNG"},
-    {"id": 24108, "name": "MAS ABYAN FARRAS SUTADI SASTRA"},
-    {"id": 24109, "name": "MAULIDA SAPETRI"},
-    {"id": 24110, "name": "MAYANG SEPTYANI DWIJAYANTI"},
-    {"id": 24111, "name": "MEHLIKA NUR AFISYA"},
-    {"id": 24112, "name": "MELDYNA DWI ARIANTI"},
-    {"id": 24113, "name": "MELINDAWATI"},
-    {"id": 24114, "name": "MIA RAHMAWATI"},
-    {"id": 24115, "name": "MIFTHA REZKA NABILA"},
-    {"id": 24116, "name": "MIRA ANDINI"},
-    {"id": 24117, "name": "MIRA ASSYIFA NADIA"},
-    {"id": 24118, "name": "MIRATUS SA'ADAH"},
-    {"id": 24119, "name": "MUFIDATUZZAHRA"},
-    {"id": 24120, "name": "MUHAMAD DENI WARDHANI"},
-    {"id": 24121, "name": "MUHAMMAD ADITYA RIZKY RAMADHAN"},
-    {"id": 24122, "name": "MUHAMMAD AIDIL ADHA RAHMATULLAH"},
-    {"id": 24123, "name": "MUHAMMAD ALDIYANSYAH"},
-    {"id": 24124, "name": "MUHAMMAD ALFIN FAIZ"},
-    {"id": 24125, "name": "MUHAMMAD ALMER FAIQ"},
-    {"id": 24126, "name": "MUHAMMAD ANDRA MAULANA"},
-    {"id": 24127, "name": "MUHAMMAD ARIF RAHMAN"},
-    {"id": 24128, "name": "MUHAMMAD ARYA RAFKA"},
-    {"id": 24129, "name": "MUHAMMAD AULIA AKBAR"},
-    {"id": 24130, "name": "MUHAMMAD BAHRUL JALAL"},
-    {"id": 24131, "name": "MUHAMMAD BA'IYDMIN ZALZALAH"},
-    {"id": 24132, "name": "MUHAMMAD BINTANG ANUGERAH"},
-    {"id": 24133, "name": "MUHAMMAD CHOLID"},
-    {"id": 24134, "name": "MUHAMMAD DANDI HABIBI"},
-    {"id": 24135, "name": "MUHAMMAD DANISH"},
-    {"id": 24136, "name": "MUHAMMAD ELMI"},
-    {"id": 24137, "name": "MUHAMMAD FAHRIZA"},
-    {"id": 24138, "name": "MUHAMMAD FAIRUZ AKBAR"},
-    {"id": 24139, "name": "MUHAMMAD FAISAL"},
-    {"id": 24140, "name": "MUHAMMAD FARDIN IKRAM"},
-    {"id": 24141, "name": "MUHAMMAD FARREL AL FARISI"},
-    {"id": 24142, "name": "MUHAMMAD FATIH REZKI"},
-    {"id": 24143, "name": "MUHAMMAD FIDZA MULKIE"},
-    {"id": 24144, "name": "MUHAMMAD FIRDAUS"},
-    {"id": 24145, "name": "MUHAMMAD HABIBIE BATUAH"},
-    {"id": 24146, "name": "MUHAMMAD HADZIQI SAKHA ATHAYA"},
-    {"id": 24147, "name": "MUHAMMAD HAFIE RAHMAN"},
-    {"id": 24148, "name": "MUHAMMAD HAIKAL"},
-    {"id": 24149, "name": "MUHAMMAD HANIF RAMADHAN"},
-    {"id": 24150, "name": "MUHAMMAD HAQQIN NAJILI"},
-    {"id": 24151, "name": "MUHAMMAD HUSIN NAFARIN"},
-    {"id": 24152, "name": "MUHAMMAD IKHFATU RAYHAN"},
-    {"id": 24153, "name": "MUHAMMAD IKMAL"},
-    {"id": 24154, "name": "MUHAMMAD ILHAM RAMADHANI"},
-    {"id": 24155, "name": "MUHAMMAD KAFI RIZKI"},
-    {"id": 24156, "name": "MUHAMMAD LUTHFI HIDAYAT"},
-    {"id": 24157, "name": "MUHAMMAD LUTHFIE"},
-    {"id": 24158, "name": "MUHAMMAD LUTHFIL KHALIQ"},
-    {"id": 24159, "name": "MUHAMMAD MAHI"},
-    {"id": 24160, "name": "MUHAMMAD MUJIBURRAHMAN"},
-    {"id": 24161, "name": "MUHAMMAD NAFI IRFAN MAULANA"},
-    {"id": 24162, "name": "MUHAMMAD NAUFAL ADLY"},
-    {"id": 24163, "name": "MUHAMMAD NAUFAL AZHAR"},
-    {"id": 24164, "name": "MUHAMMAD NAUFAL RAFIF"},
-    {"id": 24165, "name": "MUHAMMAD NAZAR FADILLAH"},
-    {"id": 24166, "name": "MUHAMMAD NUR HUDA"},
-    {"id": 24167, "name": "MUHAMMAD RAFA"},
-    {"id": 24168, "name": "MUHAMMAD RAJABI"},
-    {"id": 24169, "name": "MUHAMMAD RAVA ALKHARIDZI"},
-    {"id": 24170, "name": "MUHAMMAD RAYHAN SAPUTRA"},
-    {"id": 24171, "name": "MUHAMMAD REFKY ADITYA"},
-    {"id": 24172, "name": "MUHAMMAD REZKI ADITYA"},
-    {"id": 24173, "name": "MUHAMMAD REZKI FADHILA"},
-    {"id": 24174, "name": "MUHAMMAD RIDHO"},
-    {"id": 24175, "name": "MUHAMMAD RIDHO NAUFAL"},
-    {"id": 24176, "name": "MUHAMMAD RIDHWAN"},
-    {"id": 24177, "name": "MUHAMMAD RIFA'E"},
-    {"id": 24178, "name": "MUHAMMAD RIFQI NABIL"},
-    {"id": 24179, "name": "MUHAMMAD RIFQI RAMADHANI"},
-    {"id": 24180, "name": "MUHAMMAD RIFQY ARIF FURHAN"},
-    {"id": 24181, "name": "MUHAMMAD RIZKY ADITYA"},
-    {"id": 24182, "name": "MUHAMMAD RIZKY PUTERA AKBAR"},
-    {"id": 24183, "name": "MUHAMMAD ROYYAN FAHREZA"},
-    {"id": 24184, "name": "MUHAMMAD SAHIBUL AIMAN"},
-    {"id": 24185, "name": "MUHAMMAD SALMAN AL FARIZI"},
-    {"id": 24186, "name": "MUHAMMAD SANDY HIDAYAT"},
-    {"id": 24187, "name": "MUHAMMAD SEPTIAN RAMADHANI"},
-    {"id": 24188, "name": "MUHAMMAD SUJBHAN"},
-    {"id": 24189, "name": "MUHAMMAD SYAHREZA"},
-    {"id": 24190, "name": "MUHAMMAD TAUFIQ"},
-    {"id": 24191, "name": "MUHAMMAD TONI YUSUF"},
-    {"id": 24192, "name": "MUHAMMAD YAHYA HELMY"},
-    {"id": 24193, "name": "MUHAMMAD YUSUF"},
-    {"id": 24194, "name": "MUHAMMAD ZAENAL HAKIEM"},
-    {"id": 24195, "name": "MUHAMMAD ZAIRULLAH ANDHIKA"},
-    {"id": 24196, "name": "MUHAMMAD ZULFADHLI AKBAR"},
-    {"id": 24197, "name": "MUASFIRA ALYA RAHMADHINI"},
-    {"id": 24198, "name": "MUSJALIPAH"},
-    {"id": 24199, "name": "MUTHI'ATUN NISA"},
-    {"id": 24200, "name": "MUTIA HANIEFA"},
-    {"id": 24201, "name": "MUTIA SARI"},
-    {"id": 24202, "name": "NABELLA AZ-ZAHRA"},
-    {"id": 24203, "name": "NABILA ANGGRAENI"},
-    {"id": 24204, "name": "NABILA PUTRI AZ-ZAHRA"},
-    {"id": 24205, "name": "NABILLA"},
-    {"id": 24206, "name": "NADA FAUZANA"},
-    {"id": 24207, "name": "NADIA KHAIRA"},
-    {"id": 24208, "name": "NADIA MAIMUNATURRAHMAH"},
-    {"id": 24209, "name": "NADIA RAHMANIAH"},
-    {"id": 24210, "name": "NAFIZATUL LUTFIA"},
-    {"id": 24211, "name": "NAHDIA MAHFUDZAH"},
-    {"id": 24212, "name": "NAILA ZAKIA"},
-    {"id": 24213, "name": "NAJLA NUR AZIZATUNNISA"},
-    {"id": 24214, "name": "NAJWATUN ZASKIA"},
-    {"id": 24215, "name": "NAMIRA SALSABILA FAZA"},
-    {"id": 24216, "name": "NARESA RISKIA"},
-    {"id": 24217, "name": "NAURA ZALFAKHAIRUNNISA"},
-    {"id": 24218, "name": "NAYLA AZKYA NAFISAH"},
-    {"id": 24219, "name": "NAYLA FADHILA"},
-    {"id": 24220, "name": "NAYLA FAIZA PUTRI"},
-    {"id": 24221, "name": "NAYLA MADINA"},
-    {"id": 24222, "name": "NAYRA NAZLA RAMADHANA"},
-    {"id": 24223, "name": "NAZMIATUL NOOR IZZAH"},
-    {"id": 24224, "name": "NIDA UL HUSNA"},
-    {"id": 24225, "name": "NI'MATUL UZMA"},
-    {"id": 24226, "name": "NITA ABIDAH"},
-    {"id": 24227, "name": "NIZAR FIRDAUS"},
-    {"id": 24228, "name": "NOOR FAIRASYA JANNAH"},
-    {"id": 24229, "name": "NOOR KAMELIA"},
-    {"id": 24230, "name": "NOOR KAMILAH"},
-    {"id": 24231, "name": "NOR ATINI"},
-    {"id": 24232, "name": "NOR HIDAYATI"},
-    {"id": 24233, "name": "NOR LAILI"},
-    {"id": 24234, "name": "NOR NAZAHAH"},
-    {"id": 24235, "name": "NORKHALISAH NA'IMAH"},
-    {"id": 24236, "name": "NORLAILLA SARI"},
-    {"id": 24237, "name": "NORMAWATI"},
-    {"id": 24238, "name": "NOVITA SALWA RAMADHANI"},
-    {"id": 24239, "name": "NUR ANISAH HUMAIRA"},
-    {"id": 24240, "name": "NUR ANNISA FITRI"},
-    {"id": 24241, "name": "NUR BAITI"},
-    {"id": 24242, "name": "NUR HIKMAH"},
-    {"id": 24243, "name": "NUR MUTIA DEWI"},
-    {"id": 24244, "name": "NUR SYIFA"},
-    {"id": 24245, "name": "NURHALIZAH"},
-    {"id": 24246, "name": "NURIL KAMALIA"},
-    {"id": 24247, "name": "NURUL AZKIYA"},
-    {"id": 24248, "name": "PUTRI SALSABELLA MECCA"},
-    {"id": 24249, "name": "RADIA MUFIDA"},
-    {"id": 24250, "name": "RAFERIDHO AHMAD"},
-    {"id": 24251, "name": "RAFIF AKMAL"},
-    {"id": 24252, "name": "RAHMAT ADITIYA"},
-    {"id": 24253, "name": "RAHMATUN NAZWA"},
-    {"id": 24254, "name": "RAIHAN ALIZA PRADANA"},
-    {"id": 24255, "name": "RAISA NISRINA"},
-    {"id": 24256, "name": "RANGGA SUKMA"},
-    {"id": 24257, "name": "RATNA HAFIZAH"},
-    {"id": 24258, "name": "RAYSA KAMILA"},
-    {"id": 24259, "name": "RAZQA NOUVAL ADHETIAN"},
-    {"id": 24260, "name": "RELIYANA SALSABILA"},
-    {"id": 24261, "name": "RESTU PAHLINA"},
-    {"id": 24262, "name": "RIEZQIA ASY-SYIFA ZAHRA"},
-    {"id": 24263, "name": "RIKA MULKIYAH BULKAINI"},
-    {"id": 24264, "name": "RIRIN ARIYANI"},
-    {"id": 24265, "name": "RISKA AMANDA FAUZIA"},
-    {"id": 24267, "name": "RIZKA ZAHRATUS SYA'BANI"},
-    {"id": 24268, "name": "RIZKINA AULIA NOOR"},
-    {"id": 24269, "name": "RIZQA KHUMAYRAH"},
-    {"id": 24270, "name": "ROLAND SATRIA NUGRAHA"},
-    {"id": 24271, "name": "RONA HIDAYATI"},
-    {"id": 24272, "name": "RONA KAMILIYA"},
-    {"id": 24273, "name": "RONY DWI PURNAMA"},
-    {"id": 24274, "name": "SALMAN AL-BAK"},
-    {"id": 24275, "name": "SALSA REGINA SAHYANI"},
-    {"id": 24276, "name": "SALWA AURA NURSHAFIRA"},
-    {"id": 24277, "name": "SANAINAH"},
-    {"id": 24278, "name": "SARIYATI"},
-    {"id": 24279, "name": "SHAFA NAURA KAMILAH"},
-    {"id": 24280, "name": "SHOFIATUL AZKIA"},
-    {"id": 24281, "name": "SILVIA RAHMAKH"},
-    {"id": 24282, "name": "SITI AMALIA SALIHAH"},
-    {"id": 24283, "name": "SITI AULIA RAHMAH"},
-    {"id": 24284, "name": "SITI AURELLYA"},
-    {"id": 24285, "name": "SITI NADHIRA AQILAH"},
-    {"id": 24286, "name": "SITI NAFISAH"},
-    {"id": 24287, "name": "SITI NOORKHALISA"},
-    {"id": 24288, "name": "SITI NORKHALISA WINALDA"},
-    {"id": 24289, "name": "SITI RAHMA AUFA"},
-    {"id": 24290, "name": "SITI ZAFIRAH AZ-ZAHRAA"},
-    {"id": 24291, "name": "SITI ZAIDA NOFARIANI"},
-    {"id": 24292, "name": "SRI ERMIYATI AGISTY"},
-    {"id": 24293, "name": "SRI RAHMA ANDINI"},
-    {"id": 24294, "name": "SYALFA RATU MARURI"},
-    {"id": 24295, "name": "SYIFA NOR RAHMAH"},
-    {"id": 24296, "name": "SYLVIA ARIANI AZ ZAHRA"},
-    {"id": 24297, "name": "TASYA AURELLIA"},
-    {"id": 24298, "name": "TIARA LAKSANA AZ-ZAHRA"},
-    {"id": 24299, "name": "TIARA WILDAYANI"},
-    {"id": 24300, "name": "TRI DARMA WULANDARI"},
-    {"id": 24301, "name": "WIDYA RAISYA NADHIRA"},
-    {"id": 24302, "name": "YENI NURHAYATIN"},
-    {"id": 24303, "name": "ZADHIA NAJMIA RAHMAH"},
-    {"id": 24304, "name": "ZAHRA AULIA"},
-    {"id": 24305, "name": "ZANATUL MUNIRAH"},
-    {"id": 24306, "name": "ZECINDA REGISTHA CAHYANI"},
-    {"id": 24307, "name": "ZIA ARISFA SELVIA PUTRI"},
-    {"id": 24308, "name": "SITI NORHALISAH"},
-    {"id": 24309, "name": "ZULFA RABBANIE"},
-    {"id": 24310, "name": "REGINA NUR INAYAH"},
-    {"id": 24311, "name": "SYARIFAH AZ ZAHRATUL QOLBI ASSEGAF"},
-    {"id": 240312, "name": "MUHAMMAD ATHAYA NUR IHSAN"}
-  ]
+/*
+ * File: style.css
+ * Deskripsi: Styling untuk antarmuka aplikasi absensi.
+ * Menggunakan prinsip-prinsip styling yang responsif.
+ */
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f4f6f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background-color: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+}
+
+h1 {
+  color: #3498db;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+video {
+  width: 100%;
+  max-width: 480px;
+  border: 4px solid #3498db;
+  border-radius: 12px;
+  margin: 20px auto;
+  display: block;
+}
+
+.status-message {
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+  min-height: 24px;
+}
+
+#result {
+  color: #27ae60;
+}
+
+#error {
+  color: #e74c3c;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background: #3498db;
+  color: white;
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: #ecf0f1;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 16px;
+  }
+  .container {
+    padding: 16px;
+  }
 }
